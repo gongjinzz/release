@@ -1,11 +1,10 @@
 package com.qf.bigdata.release.etl.release.dm
 
 import com.qf.bigdata.release.constant.ReleaseConstant
-import com.qf.bigdata.release.enums.ReleaseStatusEnum
-import com.qf.bigdata.release.etl.release.dw.{DWReleaseColumnsHelper}
 import com.qf.bigdata.release.util.SparkHelper
 import org.apache.spark.SparkConf
-import org.apache.spark.sql.{SaveMode, SparkSession}
+import org.apache.spark.sql.{Column, SaveMode, SparkSession}
+import org.apache.spark.storage.StorageLevel
 import org.slf4j.{Logger, LoggerFactory}
 
 class DMReleaseCustomer{
@@ -31,20 +30,60 @@ object DMReleaseCustomer {
       import org.apache.spark.sql.functions._
       //缓存级别
       val saveMode:SaveMode = SaveMode.Overwrite
+      val storageLevel :StorageLevel = ReleaseConstant.DEF_STORAGE_LEVEL
 
       //日志数据
-      val customerColumns = DMReleaseColumnsHelper.selectDMReleaseCustomerColumns()
+      val customerColumns = DMReleaseColumnsHelper.selectDWReleaseCustomerColumns()
 
       //当天数据
-      val customerReleaseCondition = (col(s"${ReleaseConstant.DEF_PARTITION}") === lit(bdp_day))
-      val customerReleaseDF = SparkHelper.readTableData(spark, ReleaseConstant.DW_RELEASE_CUSTOMER, customerColumns)
-        .where(customerReleaseCondition)
-        .repartition(ReleaseConstant.DEF_SOURCE_PARTITIONS)
+      val customerCondition = $"${ReleaseConstant.DEF_PARTITION}" === lit(bdp_day)
+      val customerReleaseDF = SparkHelper.readTableData(spark, ReleaseConstant.DW_RELEASE_CUSTOMER)
+        .where(customerCondition)
+        .selectExpr(customerColumns:_*)
+        .persist(storageLevel)
       println(s"customerReleaseDF================")
       customerReleaseDF.show(10,false)
 
-      //目标客户
-      SparkHelper.writeTableData(customerReleaseDF, ReleaseConstant.DM_RELEASE_CUSTOMER, saveMode)
+
+      //渠道统计
+      val customerSourceGroupColumns : Seq[Column] = Seq[Column]($"${ReleaseConstant.COL_RELEASE_SOURCES}",$"${ReleaseConstant.COL_RELEASE_CHANNELS}",
+        $"${ReleaseConstant.COL_RELEASE_DEVICE_TYPE}")
+      val customerSourceColumns = DMReleaseColumnsHelper.selectDMCustomerSourcesColumns()
+
+      val customerSourceDMDF = customerReleaseDF
+        .groupBy(customerSourceGroupColumns:_*)
+        .agg(
+          countDistinct(lit(ReleaseConstant.COL_RELEASE_DEVICE_NUM)).alias(s"${ReleaseConstant.COL_MEASURE_USER_COUNT}"),
+          count(lit(ReleaseConstant.COL_RELEASE_SESSION_ID)).alias(s"${ReleaseConstant.COL_MEASURE_TOTAL_COUNT}")
+        )
+        .withColumn(s"${ReleaseConstant.DEF_PARTITION}",lit(bdp_day))
+        .selectExpr(customerSourceColumns:_*)
+      SparkHelper.writeTableData(customerSourceDMDF, ReleaseConstant.DM_RELEASE_CUSTOMER_SOURCES, saveMode)
+
+
+      //多维统计
+      val customerCubeGroupColumns : Seq[Column] = Seq[Column](
+        $"${ReleaseConstant.COL_RELEASE_SOURCES}",
+          $"${ReleaseConstant.COL_RELEASE_CHANNELS}",
+          $"${ReleaseConstant.COL_RELEASE_DEVICE_TYPE}",
+        $"${ReleaseConstant.COL_RELEASE_AGE_RANGE}",
+        $"${ReleaseConstant.COL_RELEASE_GENDER}",
+        $"${ReleaseConstant.COL_RELEASE_AREA_CODE}"
+      )
+      val customerCubeColumns = DMReleaseColumnsHelper.selectDMCustomerCubeColumns()
+
+      val customerCubeDF = customerReleaseDF
+        .cube(customerCubeGroupColumns:_*)
+        .agg(
+          countDistinct(lit(ReleaseConstant.COL_RELEASE_DEVICE_NUM)).alias(s"${ReleaseConstant.COL_MEASURE_USER_COUNT}"),
+          count(lit(ReleaseConstant.COL_RELEASE_SESSION_ID)).alias(s"${ReleaseConstant.COL_MEASURE_TOTAL_COUNT}")
+        )
+        .withColumn(s"${ReleaseConstant.DEF_PARTITION}",lit(bdp_day))
+        .selectExpr(customerCubeColumns:_*)
+      SparkHelper.writeTableData(customerCubeDF, ReleaseConstant.DM_RELEASE_CUSTOMER_CUBE, saveMode)
+
+
+
 
     }catch{
       case ex:Exception => {

@@ -4,6 +4,7 @@ import java.text.SimpleDateFormat
 import java.util.{Date, Properties}
 
 import com.qf.bigdata.release.constant.ReleaseConstant
+import com.qf.bigdata.release.etl.udf.QFUdf
 import org.apache.commons.lang3.StringUtils
 import org.apache.spark.{Dependency, SparkConf}
 import org.apache.spark.sql.types.{StructField, StructType}
@@ -66,11 +67,10 @@ object SparkHelper {
     */
   def registerFun(spark: SparkSession):Unit={
     //时间段
-    //spark.udf.register("getTimeSegment", QFUdf.getTimeSegment _)
+    spark.udf.register("getTimeSegment", QFUdf.getTimeSegment _)
 
-    //手机制造商
-    //spark.udf.register("getManufacturerSource", QFUdf.getManufacturerSource _)
-
+    //年龄段
+    spark.udf.register("getAgeRange", QFUdf.getAgeRange _)
   }
 
 

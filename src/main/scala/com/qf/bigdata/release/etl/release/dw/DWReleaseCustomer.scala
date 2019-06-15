@@ -75,8 +75,9 @@ object DWReleaseCustomer {
         .set("hive.input.format", "org.apache.hadoop.hive.ql.io.CombineHiveInputFormat")
         .set("spark.sql.autoBroadcastJoinThreshold", "50485760")
         .set("spark.sql.crossJoin.enabled", "true")
+        //.set("spark.sql.warehouse.dir","hdfs://hdfsCluster/sparksql/db")
         .setAppName(appName)
-      //.setMaster("local[4]")
+        //.setMaster("local[4]")
 
       //spark上下文会话
       spark = SparkHelper.createSpark(sconf)
@@ -102,11 +103,11 @@ object DWReleaseCustomer {
 
   def main(args: Array[String]): Unit = {
 
-    val Array(appName, bdp_day_begin, bdp_day_end) = args
+    //val Array(appName, bdp_day_begin, bdp_day_end) = args
 
-    //    val appName: String = "dw_shop_log_job"
-    //    val bdp_day_begin:String = "20190525"
-    //    val bdp_day_end:String = "20190525"
+        val appName: String = "dw_release_customer_job"
+        val bdp_day_begin:String = "20190613"
+        val bdp_day_end:String = "20190613"
 
     val begin = System.currentTimeMillis()
     handleJobs(appName, bdp_day_begin, bdp_day_end)

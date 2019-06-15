@@ -39,14 +39,19 @@ object ReleaseConstant {
   val COL_RELEASE_DEVICE_NUM:String = "device_num"
   val COL_RELEASE_DEVICE_TYPE:String = "device_type"
   val COL_RELEASE_SOURCES:String = "sources"
+  val COL_RELEASE_AGE_RANGE:String = "age_range"
   val COL_RELEASE_CHANNELS:String = "channels"
+  val COL_RELEASE_GENDER:String = "gender"
+  val COL_RELEASE_AREA_CODE:String = "area_code"
   val COL_RELEASE_EXTS:String = "exts"
   val COL_RELEASE_CT:String = "ct"
+
+  //
 
 
   //量度列
   val COL_MEASURE_USER_COUNT = "user_count"
-  val COL_MEASURE_SESSION_COUNT = "session_count"
+  val COL_MEASURE_TOTAL_COUNT = "total_count"
 
 
 
@@ -64,7 +69,9 @@ object ReleaseConstant {
 
 
   //dm======================================================
-  val DM_RELEASE_CUSTOMER = "dm_release.dm_release_customer"
+  val DM_RELEASE_CUSTOMER_SOURCES = "dm_release.dm_customer_sources"
+
+  val DM_RELEASE_CUSTOMER_CUBE = "dm_release.dm_customer_cube"
 
   //dm-MYSQL======================================================
 

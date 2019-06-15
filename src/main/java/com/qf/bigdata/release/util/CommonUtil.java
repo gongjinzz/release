@@ -4,6 +4,8 @@ import com.alibaba.fastjson.JSON;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.qf.bigdata.release.constant.CommonConstant;
+import com.qf.bigdata.release.enums.AgeRangerEnum;
+import com.qf.bigdata.release.enums.DaySegmentEnum;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -138,6 +140,69 @@ public class CommonUtil {
 			}
 		}
 		return result;
+	}
+
+	public static String getTimeSegment(Long ct) {
+		String tseg = "";
+		try {
+			int tHour = Integer.valueOf(CommonUtil.dateFormatTimestamp2Pattern(ct, CommonConstant.PATTERN_HOUR));
+
+			if(DaySegmentEnum.MORNING_EARLY.getBegin() <= tHour && tHour <= DaySegmentEnum.MORNING_EARLY.getEnd()){
+				//凌晨
+				tseg = DaySegmentEnum.MORNING_EARLY.getCode();
+
+			}else if(DaySegmentEnum.MORNING.getBegin() <= tHour && tHour <= DaySegmentEnum.MORNING.getEnd()){
+				//早晨
+				tseg = DaySegmentEnum.MORNING.getCode();
+
+			}else if(DaySegmentEnum.MIDDAY.getBegin() <= tHour && tHour <= DaySegmentEnum.MIDDAY.getEnd()){
+				//中午
+				tseg = DaySegmentEnum.MIDDAY.getCode();
+
+			}else if(DaySegmentEnum.AFTERNOON.getBegin() <= tHour && tHour <= DaySegmentEnum.AFTERNOON.getEnd()){
+				//下午
+				tseg = DaySegmentEnum.AFTERNOON.getCode();
+			}else if(DaySegmentEnum.NIGHT.getBegin() <= tHour && tHour <= DaySegmentEnum.NIGHT.getEnd()){
+				//晚上
+				tseg = DaySegmentEnum.NIGHT.getCode();
+			}
+		} catch (Exception e) {
+			log.error("TimeSegmentUdf.error:" + e.getMessage());
+		}
+		return tseg;
+	}
+
+
+	/**
+	 * 年龄段
+	 * @param age
+	 * @return
+	 */
+	public static String getAgeRange(String age) {
+		String ageRange = "";
+		try {
+			int ageInt = Integer.valueOf(age);
+
+			if(AgeRangerEnum.AGE_18.getBegin() <= ageInt && ageInt <= AgeRangerEnum.AGE_18.getEnd()){
+				ageRange = AgeRangerEnum.AGE_18.getCode();
+
+			}else if(AgeRangerEnum.AGE_18_25.getBegin() <= ageInt && ageInt <= AgeRangerEnum.AGE_18_25.getEnd()){
+				ageRange = AgeRangerEnum.AGE_18_25.getCode();
+
+			}else if(AgeRangerEnum.AGE_26_35.getBegin() <= ageInt && ageInt <= AgeRangerEnum.AGE_26_35.getEnd()){
+				ageRange = AgeRangerEnum.AGE_26_35.getCode();
+
+			}else if(AgeRangerEnum.AGE_36_45.getBegin() <= ageInt && ageInt <= AgeRangerEnum.AGE_36_45.getEnd()){
+				ageRange = AgeRangerEnum.AGE_36_45.getCode();
+
+			}else if(AgeRangerEnum.AGE_45.getBegin() <= ageInt && ageInt <= AgeRangerEnum.AGE_45.getEnd()){
+				ageRange = AgeRangerEnum.AGE_45.getCode();
+
+			}
+		} catch (Exception e) {
+			log.error("getAgeRange.error:" + e.getMessage());
+		}
+		return ageRange;
 	}
 
 	//---字符操作------------------------------------------------------
