@@ -6,10 +6,17 @@ import scala.collection.mutable.ArrayBuffer
   * DW层投放业务列表
   */
 object DWReleaseColumnsHelper {
+  /**
+    * 曝光
+    * TODO 列待定
+    * @return
+    */
+  def selectDWReleaseExposureColumns() = ???
 
 
   /**
     * 目标客户
+    *
     * @return
     */
   def selectDWReleaseCustomerColumns():ArrayBuffer[String] ={
