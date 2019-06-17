@@ -44,6 +44,7 @@ object DWReleaseCustomer {
       println(s"customerReleaseDF================")
       customerReleaseDF.show(10,false)
 
+
       //目标客户
       SparkHelper.writeTableData(customerReleaseDF, ReleaseConstant.DW_RELEASE_CUSTOMER, saveMode)
 
