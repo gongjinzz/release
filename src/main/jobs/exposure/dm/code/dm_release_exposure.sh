@@ -12,4 +12,4 @@ yesterday=`date -d "-1 day" +"%Y%m%d"`
 --executor-memory 2G \
 --executor-cores 2 \
  release-1.0-SNAPSHOT-DMReleaseCustomerJob.jar \
- dm_release_customer_code_job $yesterday $yesterday
+ dm_release_exposure_code_job $yesterday $yesterday
