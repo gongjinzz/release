@@ -61,6 +61,7 @@ object ReleaseConstant {
   //dw======================================================
   val DW_RELEASE_CUSTOMER = "dw_release.dw_release_customer"
   val DW_RELEASE_NOTCUSTOMER = "dw_release.dw_release_notcustomer"
+  val DW_RELEASE_EXPOSURE = "dw_release.dw_release_exposure"
 
 
 

@@ -36,7 +36,7 @@ object DWReleaseExposure {
       val exposureColumns = DWReleaseColumnsHelper.selectDWReleaseExposureColumns()
 
       //当天数据
-      val exposureReleaseCondition = (col(s"${ReleaseConstant.DEF_PARTITION}") === lit(bdp_day) and col(s"${ReleaseConstant.COL_RELEASE_SESSION_STATUS}") === lit(ReleaseStatusEnum.CUSTOMER.getCode))
+      val exposureReleaseCondition = (col(s"${ReleaseConstant.DEF_PARTITION}") === lit(bdp_day) and col(s"${ReleaseConstant.COL_RELEASE_SESSION_STATUS}") === lit(ReleaseStatusEnum.SHOW.getCode))
       val exposureReleaseDF = SparkHelper.readTableData(spark, ReleaseConstant.ODS_RELEASE_SESSION, exposureColumns)
         .where(exposureReleaseCondition)
           .repartition(ReleaseConstant.DEF_SOURCE_PARTITIONS)
@@ -44,8 +44,8 @@ object DWReleaseExposure {
       exposureReleaseDF.show(10,false)
 
 
-      //目标客户
-      SparkHelper.writeTableData(exposureReleaseDF, ReleaseConstant.DW_RELEASE_CUSTOMER, saveMode)
+      //曝光写入DW
+      SparkHelper.writeTableData(exposureReleaseDF, ReleaseConstant.DW_RELEASE_EXPOSURE, saveMode)
 
     }catch{
       case ex:Exception => {
