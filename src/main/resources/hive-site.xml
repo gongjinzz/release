@@ -52,7 +52,6 @@
        <name>hive.metastore.uris</name>
        <value>thrift://node242:9083</value>
     </property>
-    
 
     <!-- thrift 
     <property>
