@@ -50,7 +50,7 @@
 	<!-- metastore--> 
     <property>
        <name>hive.metastore.uris</name>
-       <value>thrift://localhost:9083</value>
+       <value>thrift://node242:9083</value>
     </property>
     
 
