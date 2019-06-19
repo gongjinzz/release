@@ -5,7 +5,7 @@ yesterday=`date -d "-1 day" +"%Y%m%d"`
 
  #spark job
 /home/framework/spark-2.2.3/bin/spark-submit \
---class com.qf.bigdata.release.etl.release.dw.DWReleaseCustomer \
+--class com.qf.bigdata.release.etl.release.dw.DWReleaseExposure \
 --master yarn \
 --deploy-mode client \
 --num-executors 10 \
