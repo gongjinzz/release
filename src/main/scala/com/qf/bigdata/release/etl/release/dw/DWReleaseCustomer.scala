@@ -46,7 +46,7 @@ object DWReleaseCustomer {
 
 
       //目标客户
-      SparkHelper.writeTableData(customerReleaseDF, ReleaseConstant.DW_RELEASE_CUSTOMER, saveMode)
+      //SparkHelper.writeTableData(customerReleaseDF, ReleaseConstant.DW_RELEASE_CUSTOMER, saveMode)
 
     }catch{
       case ex:Exception => {
@@ -78,7 +78,7 @@ object DWReleaseCustomer {
         .set("spark.sql.crossJoin.enabled", "true")
         //.set("spark.sql.warehouse.dir","hdfs://hdfsCluster/sparksql/db")
         .setAppName(appName)
-        //.setMaster("local[4]")
+        .setMaster("local[4]")
 
       //spark上下文会话
       spark = SparkHelper.createSpark(sconf)

@@ -1,7 +1,7 @@
 set spark.sql.shuffle.partitions=${partitions};
 set hive.exec.dynamic.partition=true;
 set hive.exec.dynamic.partition.mode=nonstrict;
-set hive.exec.max.dynamic.partitions=100000
+set hive.exec.max.dynamic.partitions=100000;
 set hive.exec.max.dynamic.partitions.pernode=100000;
 
 with release_customer as (
