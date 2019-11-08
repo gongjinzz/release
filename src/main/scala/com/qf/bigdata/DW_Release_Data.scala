@@ -1,53 +1,50 @@
-package com.qf.bigdata.release.etl.release.dw
+package com.qf.bigdata
 
 import com.qf.bigdata.release.constant.ReleaseConstant
 import com.qf.bigdata.release.enums.ReleaseStatusEnum
+import com.qf.bigdata.release.etl.release.dw.DWReleaseCustomer.{handleJobs, handleReleaseJob, logger}
+import com.qf.bigdata.release.etl.release.dw.{DWReleaseColumnsHelper, DWReleaseCustomer}
 import com.qf.bigdata.release.util.SparkHelper
 import org.apache.spark.SparkConf
-import org.apache.spark.sql.{Column, SaveMode, SparkSession}
+import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 import org.apache.spark.storage.StorageLevel
 import org.slf4j.{Logger, LoggerFactory}
 
-class DWReleaseCustomer{
-
-}
+import scala.collection.mutable.ArrayBuffer
 
 /**
-  * 投放目标客户
+  * 目标客户
+  * status=01
   */
-object DWReleaseCustomer {
+object DW_Release_Data {
 
-  val logger :Logger = LoggerFactory.getLogger(DWReleaseCustomer.getClass)
+  val logger: Logger = LoggerFactory.getLogger(DWReleaseCustomer.getClass)
 
-
-  /**
-    * 目标客户
-    * status=01
-    */
-  def handleReleaseJob(spark:SparkSession, appName :String, bdp_day:String) :Unit = {
+  def handleReleaseJob(spark: SparkSession, appName: String, bdp_day: String): Unit = {
     val begin = System.currentTimeMillis()
-    try{
+    try {
       import spark.implicits._
       import org.apache.spark.sql.functions._
+
       //缓存级别
-      val storageLevel :StorageLevel = ReleaseConstant.DEF_STORAGE_LEVEL
-      val saveMode:SaveMode = SaveMode.Overwrite
+      val storageLevel: StorageLevel = ReleaseConstant.DEF_STORAGE_LEVEL
+      val saveMode: SaveMode = SaveMode.Overwrite
 
-      //日志数据  选择列
-      val customerColumns = DWReleaseColumnsHelper.selectDWReleaseCustomerColumns()
+      //日志数据 选择列
+      val customerColumns= DWReleaseColumnsHelper.selectDWReleaseCustomerColumns()
 
-      //当天数据
+      //当天的数据
       val customerReleaseCondition = ( col(s"${ReleaseConstant.DEF_PARTITION}") === lit(bdp_day) and col(s"${ReleaseConstant.COL_RELEASE_SESSION_STATUS}") === lit(ReleaseStatusEnum.CUSTOMER.getCode))
 
-      val customerReleaseDF = SparkHelper.readTableData(spark, ReleaseConstant.ODS_RELEASE_SESSION, customerColumns)
+      val customerReleaseDF: DataFrame = SparkHelper.readTableData(spark,ReleaseConstant.DEF_PARTITION,customerColumns)
         .where(customerReleaseCondition)
-          .repartition(ReleaseConstant.DEF_SOURCE_PARTITIONS)
+        .repartition(ReleaseConstant.DEF_SOURCE_PARTITIONS)
+
       println(s"customerReleaseDF================")
       customerReleaseDF.show(10,false)
 
       //目标客户
-      SparkHelper.writeTableData(customerReleaseDF, ReleaseConstant.DW_RELEASE_CUSTOMER, saveMode)
-
+      //SparkHelper.writeTableData(customerReleaseDF, ReleaseConstant.DW_RELEASE_CUSTOMER, saveMode)
     }catch{
       case ex:Exception => {
         println(s"DWReleaseCustomer.handleReleaseJob occur exception：app=[$appName],date=[${bdp_day}], msg=$ex")
@@ -58,15 +55,13 @@ object DWReleaseCustomer {
     }
   }
 
-
-
   /**
     * 投放目标客户
-    * @param appName
     */
-  def handleJobs(appName :String, bdp_day_begin:String, bdp_day_end:String) :Unit = {
+
+  def handleJobs(appName:String,bdp_day_begin:String, bdp_day_end:String): Unit ={
     var spark :SparkSession = null
-    try{
+    try {
       //spark配置参数
       val sconf = new SparkConf()
         .set("hive.exec.dynamic.partition", "true")
@@ -80,15 +75,13 @@ object DWReleaseCustomer {
         .setAppName(appName)
         .setMaster("local[4]")
 
-      //spark上下文会话
-      spark = SparkHelper.createSpark(sconf)
+      spark=SparkHelper.createSpark(sconf)
 
       val timeRanges = SparkHelper.rangeDates(bdp_day_begin, bdp_day_end)
       for(bdp_day <- timeRanges.reverse){
         val bdp_date = bdp_day.toString
         handleReleaseJob(spark, appName, bdp_date)
       }
-
     }catch{
       case ex:Exception => {
         println(s"DWReleaseCustomer.handleJobs occur exception：app=[$appName],bdp_day=[${bdp_day_begin} - ${bdp_day_end}], msg=$ex")
@@ -101,17 +94,12 @@ object DWReleaseCustomer {
     }
   }
 
-
   def main(args: Array[String]): Unit = {
 
-    //val Array(appName, bdp_day_begin, bdp_day_end) = args
-
-    System.setProperty("hadoop.home.dir", "D:\\framework\\hadoop-win\\hadoop-common-2.2.0-bin-master")
-
-
+//    System.setProperty("hadoop.home.dir", "D:\\framework\\hadoop-win\\hadoop-common-2.2.0-bin-master")
     val appName: String = "dw_release_customer_job"
-        val bdp_day_begin:String = "20190613"
-        val bdp_day_end:String = "20190613"
+    val bdp_day_begin:String = "20190613"
+    val bdp_day_end:String = "20190613"
 
     val begin = System.currentTimeMillis()
     handleJobs(appName, bdp_day_begin, bdp_day_end)
@@ -119,6 +107,4 @@ object DWReleaseCustomer {
 
     println(s"appName=[${appName}], begin=$begin, use=${end-begin}")
   }
-
-
 }

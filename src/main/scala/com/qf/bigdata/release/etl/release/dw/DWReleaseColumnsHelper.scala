@@ -34,6 +34,7 @@ object DWReleaseColumnsHelper {
     columns.+=("ct")
     columns.+=("bdp_day")
     columns
+
   }
 
 

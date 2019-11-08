@@ -346,8 +346,10 @@ object SparkHelper {
   def writeTableData(sourceDF :DataFrame, table:String, mode:SaveMode) :Unit ={
     val begin = System.currentTimeMillis()
     //写入表数据
+    //没有分区啊?
     sourceDF.write.mode(mode).insertInto(table)
     println(s"table[$table] use:${System.currentTimeMillis() - begin}=========================>")
+
   }
 
 

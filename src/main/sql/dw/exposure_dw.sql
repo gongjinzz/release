@@ -3,7 +3,7 @@ create database if not exists dw_release;
 
 
 --2 曝光主题
-create external table if not exists dw_release.dw_release_exposure(
+create external table if not exists hzj_dw_release.dw_release_exposure(
   release_session string comment '投放会话id',
   release_status string comment '参考下面投放流程状态说明',
   device_num string comment '设备唯一编码',

@@ -59,7 +59,7 @@ object ReleaseConstant {
 
 
   //ods======================================================
-  val ODS_RELEASE_SESSION = "ods_release.ods_01_release_session"
+  val ODS_RELEASE_SESSION = "hzj_ods_release.ods_01_release_session"
 
   //dw======================================================
   val DW_RELEASE_CUSTOMER = "dw_release.dw_release_customer"

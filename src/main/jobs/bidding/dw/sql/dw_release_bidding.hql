@@ -17,13 +17,12 @@ select
     get_json_object(exts,'$.bidding_price') as bidding_price,
     get_json_object(exts,'$.aid') as aid,
     ct,
-    --from_unixtime(ct/1000, 'yyyy-MM-dd HH:mm:ss') as ct2,
     bdp_day
 from ods_release.ods_01_release_session
 where
-    bdp_day = '20190614'
+    bdp_day = '${bdp_day}'
 and
-    release_status = '02'
+    release_status = '${release_status}'
 ),
 pmp as (
 select
@@ -33,7 +32,6 @@ select
     device_type,
     sources,
     channels,
-    bidding_status,
     bidding_type,
     bidding_price,
     bidding_price as cost_price,
@@ -74,8 +72,6 @@ select
     bidding_status,
     bidding_type,
     bidding_price,
-    bidding_price as cost_price,
-    "1" as bidding_result,
     aid,
     ct,
     bdp_day
@@ -109,7 +105,6 @@ select
     m.device_type,
     m.sources,
     m.channels,
-    m.bidding_status,
     m.bidding_type,
     m.bidding_price,
     if(isnotnull(p.bidding_price),p.bidding_price, '0') as cost_price,
@@ -127,6 +122,7 @@ bidding_total as (
     select * from rtb_merge
 )
 
+insert overwrite table dw_release.dw_release_bidding partition(bdp_day)
 select
     release_session,
     release_status,
@@ -134,7 +130,6 @@ select
     device_type,
     sources,
     channels,
-    bidding_status,
     bidding_type,
     bidding_price,
     cost_price,
@@ -143,5 +138,3 @@ select
     ct,
     bdp_day
 from bidding_total
-where
-    bidding_type = 'RTB'

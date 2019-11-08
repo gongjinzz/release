@@ -1,4 +1,4 @@
-CREATE TABLE shop.sync_mysql_hive (
+CREATE TABLE release.sync_mysql_hive (
   `id` bigint(32) unsigned NOT NULL AUTO_INCREMENT COMMENT '主键id',
   `db_mysql` varchar(30) NOT NULL DEFAULT 'shop' COMMENT 'mysql数据库',
   `table_mysql` varchar(50) NOT NULL COMMENT 'mysql表',
@@ -14,6 +14,6 @@ CREATE TABLE shop.sync_mysql_hive (
 
 //==========================================================
 
-insert into shop.sync_mysql_hive(db_mysql, table_mysql, db_hive, table_hive)
-values('shop','date_dim','dim_shop','date_dim');
+insert into release.sync_mysql_hive(db_mysql, table_mysql, db_hive, table_hive)
+values('release','dm_customer_sources','dm_release','dm_customer_sources');
 

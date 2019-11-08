@@ -35,13 +35,43 @@ object QFUdf {
   }
 
 
+  /**
+    * 用户积分统计
+    * @param ct
+    * @return
+    */
+  def getScore(action :String, actionCount:Int):Int = {
+    var score = 0;
+    if(StringUtils.isNotEmpty(action)){
+      try{
+        if("01".equals(action)){
+          score = actionCount;
+        }else if("02".equals(action)){
+          score = actionCount * 2;
+        }else if("03".equals(action)){
+          score = actionCount * 2;
+        }else if("04".equals(action)){
+          score = actionCount * 3;
+        }else if("05".equals(action)){
+          score = actionCount * 5;
+        }
+      }catch{
+        case ex:Exception => {
+          println(s"QFUdf.getScore occur exception：msg=$ex")
+        }
+      }
+    }
+    score
+  }
+
+
 
 
   /**
     * 年龄段
     * @return
     */
-  def getAgeRange(age:String): String = {
+  def getAgeRange(age:Int): String = {
     var tseg = ""
     if(null != age){
       try{

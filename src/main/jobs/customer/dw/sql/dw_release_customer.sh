@@ -5,7 +5,6 @@ partitions=200
 yesterday=`date -d "-1 day" +"%Y%m%d"`
 release_status=01
 
-
  #spark sql job
 /home/framework/spark-2.2.3/bin/spark-sql \
 --master yarn  \

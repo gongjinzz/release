@@ -7,7 +7,9 @@ import org.apache.spark.sql.{Column, SaveMode, SparkSession}
 import org.apache.spark.storage.StorageLevel
 import org.slf4j.{Logger, LoggerFactory}
 
-class DMReleaseCustomer{
+import scala.collection.mutable.ArrayBuffer
+
+class DMReleaseCustomer {
 
 }
 
@@ -17,55 +19,65 @@ class DMReleaseCustomer{
   */
 object DMReleaseCustomer {
 
-  val logger :Logger = LoggerFactory.getLogger(DMReleaseCustomer.getClass)
+  val logger: Logger = LoggerFactory.getLogger(DMReleaseCustomer.getClass)
+
 
   /**
     * 目标客户
     * status=01
     */
-  def handleReleaseJob(spark:SparkSession, appName :String, bdp_day:String) :Unit = {
+  def handleReleaseJob(spark: SparkSession, appName: String, bdp_day: String): Unit = {
     val begin = System.currentTimeMillis()
-    try{
+    try {
       import spark.implicits._
       import org.apache.spark.sql.functions._
       //缓存级别
-      val saveMode:SaveMode = SaveMode.Overwrite
-      val storageLevel :StorageLevel = ReleaseConstant.DEF_STORAGE_LEVEL
+      val saveMode: SaveMode = SaveMode.Overwrite
+      val storageLevel: StorageLevel = ReleaseConstant.DEF_STORAGE_LEVEL
+
 
       //日志数据
+      //选择的列
       val customerColumns = DMReleaseColumnsHelper.selectDWReleaseCustomerColumns()
 
       //当天数据
+      //判断条件
       val customerCondition = $"${ReleaseConstant.DEF_PARTITION}" === lit(bdp_day)
-      val customerReleaseDF = SparkHelper.readTableData(spark, ReleaseConstant.DW_RELEASE_CUSTOMER)
-        .where(customerCondition)
-        .selectExpr(customerColumns:_*)
-        .persist(storageLevel)
-      println(s"customerReleaseDF================")
-      customerReleaseDF.show(10,false)
 
+//      val customerReleaseDF = SparkHelper.readTableData(spark, ReleaseConstant.DW_RELEASE_CUSTOMER)
+      val customerReleaseDF = SparkHelper.readTableData(spark, "hzj_dw_release.dw_release_customer")
+        .where(customerCondition)
+        .selectExpr(customerColumns: _*)
+        .persist(storageLevel)
+
+      println(s"customerReleaseDF================")
+      customerReleaseDF.where("sources='baidu'").show(100, false)
 
       //渠道统计
-      val customerSourceGroupColumns : Seq[Column] = Seq[Column]($"${ReleaseConstant.COL_RELEASE_SOURCES}",$"${ReleaseConstant.COL_RELEASE_CHANNELS}",
+      val customerSourceGroupColumns: Seq[Column] = Seq[Column]($"${ReleaseConstant.COL_RELEASE_SOURCES}", $"${ReleaseConstant.COL_RELEASE_CHANNELS}",
         $"${ReleaseConstant.COL_RELEASE_DEVICE_TYPE}")
+
+      $"${ReleaseConstant.COL_RELEASE_SOURCES}"
       val customerSourceColumns = DMReleaseColumnsHelper.selectDMCustomerSourcesColumns()
 
       val customerSourceDMDF = customerReleaseDF
-        .groupBy(customerSourceGroupColumns:_*)
+        .groupBy(customerSourceGroupColumns: _*)
         .agg(
           countDistinct(lit(ReleaseConstant.COL_RELEASE_DEVICE_NUM)).alias(s"${ReleaseConstant.COL_MEASURE_USER_COUNT}"),
           count(lit(ReleaseConstant.COL_RELEASE_SESSION_ID)).alias(s"${ReleaseConstant.COL_MEASURE_TOTAL_COUNT}")
         )
-        .withColumn(s"${ReleaseConstant.DEF_PARTITION}",lit(bdp_day))
-        .selectExpr(customerSourceColumns:_*)
-      SparkHelper.writeTableData(customerSourceDMDF, ReleaseConstant.DM_RELEASE_CUSTOMER_SOURCES, saveMode)
+        .withColumn(s"${ReleaseConstant.DEF_PARTITION}", lit(bdp_day))
+        .selectExpr(customerSourceColumns: _*)
+
+      //      customerSourceDMDF.show(100, false)
+      //SparkHelper.writeTableData(customerSourceDMDF, ReleaseConstant.DM_RELEASE_CUSTOMER_SOURCES, saveMode)
 
 
       //多维统计
-      val customerCubeGroupColumns : Seq[Column] = Seq[Column](
+      val customerCubeGroupColumns: Seq[Column] = Seq[Column](
         $"${ReleaseConstant.COL_RELEASE_SOURCES}",
-          $"${ReleaseConstant.COL_RELEASE_CHANNELS}",
-          $"${ReleaseConstant.COL_RELEASE_DEVICE_TYPE}",
+        $"${ReleaseConstant.COL_RELEASE_CHANNELS}",
+        $"${ReleaseConstant.COL_RELEASE_DEVICE_TYPE}",
         $"${ReleaseConstant.COL_RELEASE_AGE_RANGE}",
         $"${ReleaseConstant.COL_RELEASE_GENDER}",
         $"${ReleaseConstant.COL_RELEASE_AREA_CODE}"
@@ -73,37 +85,37 @@ object DMReleaseCustomer {
       val customerCubeColumns = DMReleaseColumnsHelper.selectDMCustomerCubeColumns()
 
       val customerCubeDF = customerReleaseDF
-        .cube(customerCubeGroupColumns:_*)
+        .cube(customerCubeGroupColumns: _*)
         .agg(
           countDistinct(lit(ReleaseConstant.COL_RELEASE_DEVICE_NUM)).alias(s"${ReleaseConstant.COL_MEASURE_USER_COUNT}"),
           count(lit(ReleaseConstant.COL_RELEASE_SESSION_ID)).alias(s"${ReleaseConstant.COL_MEASURE_TOTAL_COUNT}")
         )
-        .withColumn(s"${ReleaseConstant.DEF_PARTITION}",lit(bdp_day))
-        .selectExpr(customerCubeColumns:_*)
-      SparkHelper.writeTableData(customerCubeDF, ReleaseConstant.DM_RELEASE_CUSTOMER_CUBE, saveMode)
+        .withColumn(s"${ReleaseConstant.DEF_PARTITION}", lit(bdp_day))
+        .selectExpr(customerCubeColumns: _*)
+
+      customerCubeDF.show(100, false)
+      //      SparkHelper.writeTableData(customerCubeDF, ReleaseConstant.DM_RELEASE_CUSTOMER_CUBE, saveMode)
 
 
-
-
-    }catch{
-      case ex:Exception => {
+    } catch {
+      case ex: Exception => {
         println(s"DMReleaseCustomer.handleReleaseJob occur exception：app=[$appName],date=[${bdp_day}], msg=$ex")
         logger.error(ex.getMessage, ex)
       }
-    }finally {
+    } finally {
       println(s"DMReleaseCustomer.handleReleaseJob End：appName=[${appName}], bdp_day=[${bdp_day}], use=[${System.currentTimeMillis() - begin}]")
     }
   }
 
 
-
   /**
     * 投放目标客户
+    *
     * @param appName
     */
-  def handleJobs(appName :String, bdp_day_begin:String, bdp_day_end:String) :Unit = {
-    var spark :SparkSession = null
-    try{
+  def handleJobs(appName: String, bdp_day_begin: String, bdp_day_end: String): Unit = {
+    var spark: SparkSession = null
+    try {
       //spark配置参数
       val sconf = new SparkConf()
         .set("hive.exec.dynamic.partition", "true")
@@ -114,24 +126,24 @@ object DMReleaseCustomer {
         .set("spark.sql.autoBroadcastJoinThreshold", "50485760")
         .set("spark.sql.crossJoin.enabled", "true")
         .setAppName(appName)
-      //.setMaster("local[4]")
+        .setMaster("local[4]")
 
       //spark上下文会话
       spark = SparkHelper.createSpark(sconf)
 
       val timeRanges = SparkHelper.rangeDates(bdp_day_begin, bdp_day_end)
-      for(bdp_day <- timeRanges.reverse){
+      for (bdp_day <- timeRanges.reverse) {
         val bdp_date = bdp_day.toString
         handleReleaseJob(spark, appName, bdp_date)
       }
 
-    }catch{
-      case ex:Exception => {
+    } catch {
+      case ex: Exception => {
         println(s"DMReleaseCustomer.handleJobs occur exception：app=[$appName],bdp_day=[${bdp_day_begin} - ${bdp_day_end}], msg=$ex")
         logger.error(ex.getMessage, ex)
       }
-    }finally {
-      if(spark != null){
+    } finally {
+      if (spark != null) {
         spark.stop()
       }
     }
@@ -140,17 +152,17 @@ object DMReleaseCustomer {
 
   def main(args: Array[String]): Unit = {
 
-    val Array(appName, bdp_day_begin, bdp_day_end) = args
+    //val Array(appName, bdp_day_begin, bdp_day_end) = args
 
-    //    val appName: String = "dw_shop_log_job"
-    //    val bdp_day_begin:String = "20190525"
-    //    val bdp_day_end:String = "20190525"
+    val appName: String = "dw_shop_log_job"
+    val bdp_day_begin: String = "20190613"
+    val bdp_day_end: String = "20190613"
 
     val begin = System.currentTimeMillis()
     handleJobs(appName, bdp_day_begin, bdp_day_end)
     val end = System.currentTimeMillis()
 
-    println(s"appName=[${appName}], begin=$begin, use=${end-begin}")
+    println(s"appName=[${appName}], begin=$begin, use=${end - begin}")
   }
 
 

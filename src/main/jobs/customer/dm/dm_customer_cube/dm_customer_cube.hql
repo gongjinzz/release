@@ -20,7 +20,7 @@ end) age_range,
 count(distinct(device_num)) user_count,
 count(distinct(device_num)) total_count
 from
-dw_release.dw_release_customer
+hzj_dw_release.dw_release_customer
 where bdp_day='${bdp_day}'
 group by
 sources,
