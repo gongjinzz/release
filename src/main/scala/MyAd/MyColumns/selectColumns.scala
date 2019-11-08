@@ -226,4 +226,45 @@ object selectColumns {
     column.+=("bdp_day")
   }
 
+  def dw_registerColumn: ArrayBuffer[String] = {
+    val column = new ArrayBuffer[String]()
+    column.+=("release_session")
+    column.+=("release_status")
+    column.+=("device_num")
+    column.+=("device_type")
+    column.+=("sources")
+    column.+=("channels")
+    column.+=("ct")
+    column.+=("bdp_day")
+  }
+
+  def dm_registerColumn: ArrayBuffer[String] = {
+    val column = new ArrayBuffer[String]()
+    /*
+    case device_type
+when 1 then 'iOS'
+when 2 then 'android'
+else 'other' end as platform,
+sources,
+channels,
+count(*)
+from
+dw_release.dw_release_register_users
+group by
+device_type,
+sources,
+channels
+     */
+    column.+=(
+      """
+        |case device_type
+        |when 1 then 'iOS'
+        |when 2 then 'android'
+        |else 'other' end as platform
+      """.stripMargin)
+    column.+=("sources")
+    column.+=("channels")
+    column.+=("cnt")
+    column.+=("bdp_day")
+  }
 }

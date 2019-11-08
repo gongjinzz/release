@@ -14,3 +14,6 @@ device_type,
 sources,
 channels
 ;
+
+
+case device_type  when 1 then 'iOS' when 2 then 'android' else 'other' end as platform,

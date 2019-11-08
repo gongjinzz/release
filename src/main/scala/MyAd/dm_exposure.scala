@@ -53,6 +53,8 @@ object dm_exposure {
       .withColumn("bdp_day", lit(bdp_day))
       .selectExpr(dm_exporeColumn: _*)
 
+    //    dm_exposure.dropDuplicates()
+
     //    dm_exposure.show(10, false)
     dm_exposure.write.mode(SaveMode.Overwrite).insertInto("hzj_dm_release.dm_release_exposure")
 
